@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>خطة ومزاد - نسخة الأساطير والميمز</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #0f172a; overflow-x: hidden; user-select: none; }
+
+        /* البطاقات */
+        .fifa-card { width: 180px; height: 260px; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.8); padding: 8px; display: flex; flex-direction: column; align-items: center; position: relative; color: #111; overflow: hidden; transition: transform 0.3s ease; }
+        .fifa-card::before { content: ''; position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px; border: 2px solid rgba(255, 255, 255, 0.4); border-radius: 8px; pointer-events: none; z-index: 2; }
+        .fifa-card.gold { background: linear-gradient(135deg, #e6c27a 0%, #ffd700 50%, #b8860b 100%); }
+        .fifa-card.silver { background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 50%, #757575 100%); color: #000; }
+        .fifa-card.bronze { background: linear-gradient(135deg, #cd7f32 0%, #a0522d 50%, #8b4513 100%); color: #fff; }
+        
+        .fifa-card.legend-card { background: linear-gradient(135deg, #111 0%, #2a2a2a 50%, #000 100%); color: #ffd700; border: 2px solid #ffd700; justify-content: center; }
+        .fifa-card.legend-card::before { border: 2px solid rgba(255, 215, 0, 0.3); }
+        .fifa-card.legend-card .legend-name { font-size: 26px; font-weight: 900; text-align: center; line-height: 1.4; z-index: 3; text-shadow: 0 4px 10px rgba(255, 215, 0, 0.5); }
+        .fifa-card.legend-card .legend-icon { font-size: 40px; margin-bottom: 15px; z-index: 3; text-shadow: 0 0 20px rgba(255,215,0,0.8); }
+
+        .fifa-card .rating { position: absolute; top: 15px; left: 15px; font-size: 32px; font-weight: 900; z-index: 3; line-height: 1; }
+        .fifa-card .pos { position: absolute; top: 50px; left: 18px; font-size: 14px; font-weight: bold; z-index: 3; text-transform: uppercase; }
+        .fifa-card img { width: 130px; height: 130px; object-fit: contain; margin-top: 30px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.6)); z-index: 3; }
+        .fifa-card .name { margin-top: auto; font-weight: 900; font-size: 18px; text-align: center; line-height: 1.2; z-index: 3; margin-bottom: 10px; border-bottom: 2px solid rgba(0,0,0,0.2); padding-bottom: 5px; width: 80%; }
+
+        /* الملعب */
+        .pitch-container { width: 100%; min-height: 350px; background-color: #387b20; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 40px, transparent 40px, transparent 80px); border: 4px solid #fff; position: relative; display: flex; flex-direction: column; border-radius: 4px; box-shadow: inset 0 0 40px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.5); }
+        #end-pitch-wrapper { height: 650px; width: 100%; max-width: 500px; margin: 0 auto; }
+        #end-pitch-container { min-height: 100%; display: flex; flex-direction: column; justify-content: space-around; padding: 20px 0; }
+        .pitch-lines .center-line { position: absolute; top: 50%; width: 100%; height: 3px; background: rgba(255,255,255,0.5); z-index: 1; }
+        .pitch-lines .center-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80px; height: 80px; border: 3px solid rgba(255,255,255,0.5); border-radius: 50%; z-index: 1; }
+        .team-half { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; position: relative; z-index: 5; padding: 10px 0; }
+        #opp-pitch { flex-direction: column-reverse; }
+        .formation-row { display: flex; justify-content: center; gap: 8px; width: 100%; }
+
+        .mini-card { width: 55px; height: 75px; background: linear-gradient(135deg, #e6c27a, #ffd700); border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; font-weight: 900; border: 2px solid #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.8); color: #000; overflow: hidden; position: relative; }
+        .mini-card.legend-mini { background: linear-gradient(135deg, #222, #000); color: #ffd700; border-color: #ffd700; }
+        .mini-card img { width: 45px; height: 45px; object-fit: contain; margin-top: 2px; filter: drop-shadow(0 2px 2px rgba(0,0,0,0.5)); }
+        .mini-card .pos-badge { background: #111; color: #fff; width: 100%; text-align: center; font-size: 8px; padding: 2px 0; position: absolute; top: 0; }
+        .mini-card span { text-align: center; line-height: 1.2; padding: 2px; background: rgba(255,255,255,0.8); width: 100%; position: absolute; bottom: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+        .mini-card.legend-mini span { background: rgba(0,0,0,0.8); font-size: 11px; white-space: normal; }
+
+        .fade-out { opacity: 0; pointer-events: none; transition: opacity 1s ease-in-out; }
+        
+        /* ريأكشنات ميمز */
+        #reaction-toast { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform: scale(0) translateY(20px); opacity: 0; pointer-events: none; }
+        #reaction-toast.show { transform: scale(1) translateY(0); opacity: 1; }
+
+        .borrow-btn { background: url('https://i.pinimg.com/736x/d8/a5/2f/d8a52faf3356dd2e1f5166381c7596df.jpg') center/cover; }
+    </style>
+</head>
+<body class="text-white h-screen flex flex-col">
+
+    <!-- توكن تأكيد الأسماء (خاصية مخفية بالنظام) -->
+    <script> const VALIDATION_TOKEN = "AQ.Ab8RN6JfcyUv6bhlxy5a1jwGaulwcNVHFflp394Sco3OmVOzJw"; </script>
+
+    <!-- الميم رياكشن -->
+    <div id="reaction-toast" class="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[200] flex flex-col items-center">
+        <img id="reaction-img" src="" class="w-64 md:w-80 rounded-2xl shadow-2xl border-4 border-yellow-400 rotate-2">
+    </div>
+
+    <!-- شاشة الافتتاح -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center transition-opacity duration-1000">
+        <h1 class="text-6xl md:text-8xl font-black mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-600 drop-shadow-2xl animate-pulse">خطة ومزاد</h1>
+        <p class="text-2xl text-blue-400 font-bold mt-2 drop-shadow-md">صناعة سيف وليد</p>
+    </div>
+
+    <!-- شاشة اللوبي -->
+    <div id="lobby-screen" class="hidden flex-1 flex flex-col items-center justify-center p-4">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md text-center">
+            <h2 class="text-3xl font-black mb-6 text-blue-400">إعداد المباراة</h2>
+            <input type="text" id="player-name" placeholder="أدخل اسمك" class="w-full p-3 mb-4 rounded bg-slate-900 border border-slate-600 text-center font-bold text-lg">
+            <select id="game-mode" class="w-full p-3 mb-6 rounded bg-slate-900 border border-slate-600 text-center font-bold text-lg">
+                <option value="5">خماسي (+ أسطورة) - 100M</option>
+                <option value="11">تشكيلة كاملة (+ أسطورة) - 200M</option>
+            </select>
+            <div class="bg-slate-900 p-4 rounded-lg mb-6 border border-slate-700">
+                <p class="text-sm text-gray-400 mb-2">كود غرفتك الخاص</p>
+                <div class="flex justify-center items-center gap-3">
+                    <p id="my-room-code" class="text-xl md:text-2xl font-black text-green-400">جاري التحميل...</p>
+                    <button onclick="copyRoomCode()" class="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg transition-colors border border-slate-500" title="نسخ الكود">📋</button>
+                </div>
+            </div>
+            <input type="text" id="friend-code" placeholder="الصق كود صديقك هنا" class="w-full p-3 mb-4 rounded bg-slate-900 border border-slate-600 text-center font-bold text-lg">
+            <button onclick="joinGame()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-black py-3 rounded-lg text-xl shadow-lg">دخول الغرفة</button>
+            <p id="lobby-status" class="mt-4 text-yellow-400 font-bold"></p>
+        </div>
+    </div>
+
+    <!-- شاشة اللعبة -->
+    <div id="game-screen" class="hidden flex-col h-full w-full">
+        <div class="flex justify-between items-center p-3 bg-slate-800 border-b border-slate-700 z-20">
+            <div class="text-center w-1/3">
+                <h2 id="opp-name-display" class="text-lg font-bold text-red-400 truncate">الخصم</h2>
+                <p class="text-2xl font-black text-yellow-400">💰<span id="opp-budget">100</span>M</p>
+            </div>
+            <div class="text-center w-1/3">
+                <h1 class="text-lg font-black text-white bg-slate-700 px-4 py-1 rounded-full border border-slate-500">
+                    <span id="current-pos-display" class="text-yellow-400">حارس</span>
+                </h1>
+                <p class="text-sm font-bold mt-1 text-gray-400">جولة <span id="round-number">1</span></p>
+            </div>
+            <div class="text-center w-1/3">
+                <h2 id="my-name-display" class="text-lg font-bold text-blue-400 truncate">أنا</h2>
+                <p class="text-2xl font-black text-yellow-400">💰<span id="my-budget">100</span>M</p>
+            </div>
+        </div>
+
+        <div class="flex-1 flex flex-col items-center justify-center relative p-2 bg-slate-900">
+            <!-- نتيجة الجولة (أوفرلاي) -->
+            <div id="round-overlay" class="hidden absolute inset-0 z-50 bg-black/95 flex-col items-center justify-center p-4 text-center">
+                <h1 class="text-4xl font-black text-yellow-400 mb-6 mt-10">نتيجة المزاد!</h1>
+                <div class="flex flex-col md:flex-row gap-6 justify-center items-center w-full max-w-4xl pb-10">
+                    <div class="flex flex-col items-center bg-slate-800 p-4 rounded-2xl border-4 border-blue-500 w-full md:w-1/2">
+                        <h2 id="winner-name-text" class="text-2xl font-black text-blue-400 mb-4"></h2>
+                        <div id="overlay-card-revealed"></div>
+                        <span id="overlay-price" class="mt-4 text-xl font-black bg-red-600 px-4 py-1 rounded-full text-white"></span>
+                    </div>
+                    <div class="flex flex-col items-center bg-slate-800 p-4 rounded-2xl border-4 border-green-500 w-full md:w-1/2 relative">
+                        <div class="absolute -top-4 bg-green-500 text-black px-3 py-1 font-black rounded-full text-sm">تعويض!</div>
+                        <h2 id="loser-name-text" class="text-2xl font-black text-green-400 mb-4"></h2>
+                        <div id="overlay-card-hidden"></div>
+                        <span class="mt-4 text-xl font-black bg-green-600 px-4 py-1 rounded-full text-white">مجاناً (0M)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="current-card-container" class="transform transition-transform duration-500 hover:scale-110 z-10 drop-shadow-2xl"></div>
+            
+            <div id="auction-controls-container" class="mt-4 text-center w-full max-w-md bg-slate-800 p-4 rounded-2xl border border-slate-600 z-10 relative">
+                <!-- أيقونة الاستلاف -->
+                <button id="borrow-btn" onclick="borrowMoney()" class="absolute -top-6 -right-2 w-14 h-14 rounded-full border-2 border-yellow-400 shadow-[0_0_15px_rgba(255,215,0,0.5)] borrow-btn transform hover:scale-110 transition-transform" title="استلف 10 مليون"></button>
+
+                <p class="text-slate-400 text-sm font-bold uppercase">المبلغ الحالي</p>
+                <p class="text-5xl font-black text-yellow-400 mb-1" id="current-bid">0M</p>
+                <p class="text-sm font-bold mb-3">أعلى مزايد: <span id="highest-bidder" class="text-blue-400">لا أحد</span></p>
+                
+                <div class="flex gap-2 justify-center">
+                    <button id="btn-bid-1" onclick="placeBid(1)" class="flex-1 bg-blue-600 text-white font-black py-2 rounded-lg shadow border border-blue-400 text-lg">+1M</button>
+                    <button id="btn-bid-5" onclick="placeBid(5)" class="flex-1 bg-purple-600 text-white font-black py-2 rounded-lg shadow border border-purple-400 text-lg">+5M</button>
+                    <button id="btn-pass" onclick="passBid()" class="flex-1 bg-red-600 text-white font-black py-2 rounded-lg shadow border border-red-400 text-lg disabled:opacity-40">انسحاب</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="h-64 w-full max-w-4xl mx-auto p-2 mb-2 flex justify-center">
+            <div class="pitch-container shadow-2xl">
+                <div class="pitch-lines"><div class="center-line"></div><div class="center-circle"></div></div>
+                <div id="opp-pitch" class="team-half"></div>
+                <div id="my-pitch" class="team-half"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- شاشة النهاية -->
+    <div id="end-screen" class="hidden fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center p-4 overflow-y-auto pt-8">
+        <div class="w-full max-w-2xl bg-slate-800 p-6 rounded-2xl border-2 border-yellow-500 shadow-2xl mb-4 text-center">
+            <h2 class="text-3xl font-black text-yellow-400 mb-2">الحكم النهائي للمباراة 🏆</h2>
+            <p id="match-verdict" class="text-lg font-bold text-white mb-4"></p>
+            
+            <div class="flex justify-between items-center bg-slate-900 p-4 rounded-xl border border-slate-700">
+                <div class="text-center w-1/3">
+                    <p id="end-my-name-score" class="text-lg font-bold text-blue-400"></p>
+                    <p class="text-sm text-gray-400">القوة: <span id="my-avg" class="text-white font-black"></span></p>
+                </div>
+                <div class="text-center w-1/3">
+                    <p class="text-sm text-gray-400 mb-1">النتيجة</p>
+                    <p id="predicted-score" class="text-4xl font-black text-yellow-400 bg-slate-800 rounded py-1 border border-slate-600"></p>
+                </div>
+                <div class="text-center w-1/3">
+                    <p id="end-opp-name-score" class="text-lg font-bold text-red-400"></p>
+                    <p class="text-sm text-gray-400">القوة: <span id="opp-avg" class="text-white font-black"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <button onclick="requestPlayAgain()" class="mb-4 bg-green-600 hover:bg-green-500 text-white font-black py-3 px-10 rounded-xl shadow-lg border-2 border-green-400 text-xl w-full max-w-2xl">لعب مباراة جديدة (في نفس الغرفة)</button>
+        <button id="toggle-view-btn" onclick="toggleEndView()" class="mb-4 w-full max-w-2xl bg-blue-600 text-white font-black py-2 px-4 rounded-xl shadow border border-blue-400">🔄 عرض تشكيلة الخصم</button>
+
+        <div id="end-pitch-wrapper">
+            <div class="pitch-container">
+                <div class="pitch-lines"><div class="center-line"></div><div class="center-circle"></div></div>
+                <div id="end-pitch-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dictionary & Pools
+        const arabicDictionary = { "Lionel Messi": "ميسي", "Cristiano Ronaldo": "رونالدو", "Kylian Mbappé": "مبابي", "Kevin De Bruyne": "دي بروين", "Mohamed Salah": "صلاح", "Virgil van Dijk": "فان دايك", "Jude Bellingham": "بيلينجهام", "Thibaut Courtois": "كورتوا", "Vinícius Jr": "فينيسيوس", "Erling Haaland": "هالاند", "Neymar Jr": "نيمار", "Rodri": "رودري", "Alisson": "أليسون", "Luka Modric": "مودريتش", "Rúben Dias": "روبن دياز", "Harry Kane": "هاري كين", "Harry Maguire": "ماجواير", "Loris Karius": "كاريوس", "Antony": "أنتوني", "Kalvin Phillips": "فيليبس", "Richarlison": "ريتشارليسون", "Eric Dier": "إيريك داير", "Timo Werner": "فيرنر", "Nicolas Pépé": "بيبي", "Ederson": "إيدرسون", "Marc-André ter Stegen": "تير شتيجن", "Emiliano Martínez": "مارتينيز", "David de Gea": "دي خيا", "Marquinhos": "ماركينيوس", "Antonio Rüdiger": "روديجر", "Trent Alexander-Arnold": "أرنولد", "Achraf Hakimi": "حكيمي", "Casemiro": "كاسيميرو", "Toni Kroos": "كروس", "Bernardo Silva": "برناردو", "Bruno Fernandes": "برونو", "Robert Lewandowski": "ليفاندوفسكي", "Karim Benzema": "بنزيما", "Heung Min Son": "سون", "Bukayo Saka": "ساكا", "Phil Foden": "فودين", "Federico Valverde": "فالفيردي", "Ronald Araújo": "أراوخو", "Kyle Walker": "ووكر" };
+        function translateName(name) { return arabicDictionary[name] || name; }
+
+        const masterPlayersPool = {
+            GK: [{ name: "Thibaut Courtois", rating: 90, img: "https://cdn.sofifa.net/players/192/119/24_120.png" }, { name: "Alisson", rating: 89, img: "https://cdn.sofifa.net/players/212/831/24_120.png" }, { name: "Ederson", rating: 88, img: "https://cdn.sofifa.net/players/210/257/24_120.png" }, { name: "Marc-André ter Stegen", rating: 89, img: "https://cdn.sofifa.net/players/192/448/24_120.png" }, { name: "Emiliano Martínez", rating: 85, img: "https://cdn.sofifa.net/players/226/753/24_120.png" }, { name: "Loris Karius", rating: 72, img: "https://cdn.sofifa.net/players/203/747/24_120.png" }, { name: "David de Gea", rating: 84, img: "https://cdn.sofifa.net/players/193/080/24_120.png" }],
+            DEF: [{ name: "Virgil van Dijk", rating: 89, img: "https://cdn.sofifa.net/players/203/376/24_120.png" }, { name: "Rúben Dias", rating: 89, img: "https://cdn.sofifa.net/players/239/818/24_120.png" }, { name: "Marquinhos", rating: 87, img: "https://cdn.sofifa.net/players/214/524/24_120.png" }, { name: "Antonio Rüdiger", rating: 85, img: "https://cdn.sofifa.net/players/205/452/24_120.png" }, { name: "Ronald Araújo", rating: 86, img: "https://cdn.sofifa.net/players/253/153/24_120.png" }, { name: "Trent Alexander-Arnold", rating: 86, img: "https://cdn.sofifa.net/players/231/281/24_120.png" }, { name: "Achraf Hakimi", rating: 84, img: "https://cdn.sofifa.net/players/235/212/24_120.png" }, { name: "Kyle Walker", rating: 84, img: "https://cdn.sofifa.net/players/188/377/24_120.png" }, { name: "Harry Maguire", rating: 79, img: "https://cdn.sofifa.net/players/203/263/24_120.png" }, { name: "Eric Dier", rating: 77, img: "https://cdn.sofifa.net/players/200/536/24_120.png" }],
+            MID: [{ name: "Kevin De Bruyne", rating: 91, img: "https://cdn.sofifa.net/players/192/985/24_120.png" }, { name: "Jude Bellingham", rating: 87, img: "https://cdn.sofifa.net/players/256/790/24_120.png" }, { name: "Rodri", rating: 89, img: "https://cdn.sofifa.net/players/231/866/24_120.png" }, { name: "Luka Modric", rating: 87, img: "https://cdn.sofifa.net/players/177/003/24_120.png" }, { name: "Casemiro", rating: 89, img: "https://cdn.sofifa.net/players/200/145/24_120.png" }, { name: "Toni Kroos", rating: 86, img: "https://cdn.sofifa.net/players/182/521/24_120.png" }, { name: "Federico Valverde", rating: 88, img: "https://cdn.sofifa.net/players/239/053/24_120.png" }, { name: "Bernardo Silva", rating: 88, img: "https://cdn.sofifa.net/players/218/667/24_120.png" }, { name: "Bruno Fernandes", rating: 88, img: "https://cdn.sofifa.net/players/212/198/24_120.png" }, { name: "Kalvin Phillips", rating: 78, img: "https://cdn.sofifa.net/players/235/520/24_120.png" }],
+            ATT: [{ name: "Lionel Messi", rating: 94, img: "https://cdn.sofifa.net/players/158/023/24_120.png" }, { name: "Cristiano Ronaldo", rating: 90, img: "https://cdn.sofifa.net/players/020/801/24_120.png" }, { name: "Kylian Mbappé", rating: 91, img: "https://cdn.sofifa.net/players/231/747/24_120.png" }, { name: "Mohamed Salah", rating: 89, img: "https://cdn.sofifa.net/players/209/331/24_120.png" }, { name: "Vinícius Jr", rating: 89, img: "https://cdn.sofifa.net/players/238/794/24_120.png" }, { name: "Erling Haaland", rating: 91, img: "https://cdn.sofifa.net/players/239/085/24_120.png" }, { name: "Neymar Jr", rating: 89, img: "https://cdn.sofifa.net/players/190/871/24_120.png" }, { name: "Harry Kane", rating: 90, img: "https://cdn.sofifa.net/players/202/126/24_120.png" }, { name: "Robert Lewandowski", rating: 90, img: "https://cdn.sofifa.net/players/188/545/24_120.png" }, { name: "Karim Benzema", rating: 90, img: "https://cdn.sofifa.net/players/165/153/24_120.png" }, { name: "Heung Min Son", rating: 87, img: "https://cdn.sofifa.net/players/200/104/24_120.png" }, { name: "Bukayo Saka", rating: 86, img: "https://cdn.sofifa.net/players/246/669/24_120.png" }, { name: "Antony", rating: 81, img: "https://cdn.sofifa.net/players/255/475/24_120.png" }, { name: "Richarlison", rating: 80, img: "https://cdn.sofifa.net/players/231/943/24_120.png" }, { name: "Timo Werner", rating: 80, img: "https://cdn.sofifa.net/players/212/188/24_120.png" }, { name: "Nicolas Pépé", rating: 77, img: "https://cdn.sofifa.net/players/228/093/24_120.png" }]
+        };
+
+        const rawLegends = ["بيليه 🇧🇷","دييجو مارادونا 🇦🇷","ليونيل ميسي 🇦🇷","كريستيانو رونالدو 🇵🇹","يوهان كرويف 🇳🇱","زين الدين زيدان 🇫🇷","رونالدو نازاريو 🇧🇷","رونالدينيو 🇧🇷","فرانز بيكنباور 🇩🇪","ألفريدو دي ستيفانو 🇪🇸🇦🇷","فيرينك بوشكاش 🇭🇺","ميشيل بلاتيني 🇫🇷","جورج بست 🇬🇧","جارينشا 🇧🇷","باولو مالديني 🇮🇹","فرانكو باريزي 🇮🇹","روبرتو باجيو 🇮🇹","روبرتو كارلوس 🇧🇷","كافو 🇧🇷","ريفالدو 🇧🇷","روماريو 🇧🇷","تشافي هيرنانديز 🇪🇸","أندريس إنييستا 🇪🇸","سيرجيو بوسكيتس 🇪🇸","لوكا مودريتش 🇭🇷","أندريا بيرلو 🇮🇹","لوتار ماتيوس 🇩🇪","غيرد مولر 🇩🇪","أوليفر كان 🇩🇪","مانويل نوير 🇩🇪","إيكر كاسياس 🇪🇸","جيانلويجي بوفون 🇮🇹","ليف ياشين 🇷🇺","تييري هنري 🇫🇷","كريم بنزيما 🇫🇷","كيليان مبابي 🇫🇷","لويس سواريز 🇺🇾","نيمار جونيور 🇧🇷","واين روني 🏴","ديفيد بيكهام 🏴","بول سكولز 🏴","رايان جيجز 🏴","إريك كانتونا 🇫🇷","جورج وياه 🇱🇷","صامويل إيتو 🇨🇲","ديدييه دروجبا 🇨🇮","يايا توريه 🇨🇮"];
+        const masterLegendsPool = rawLegends.map(name => ({ nameAr: name, rating: Math.floor(Math.random() * (99 - 95 + 1)) + 95, isLegend: true, posCategory: 'LGD' }));
+        Object.keys(masterPlayersPool).forEach(pos => { masterPlayersPool[pos] = masterPlayersPool[pos].map(p => ({ ...p, nameAr: translateName(p.name), posCategory: pos })); });
+
+        // صور الميمز
+        const IMG_GREAT = "https://i.pinimg.com/736x/c6/54/79/c65479846d854f13a81154a5448023fe.jpg";
+        const IMG_MID = "https://i.pinimg.com/736x/b1/95/18/b19518dff6addbd8d6a6094eba7ff05a.jpg";
+        const IMG_SCAMMED = "https://i.pinimg.com/736x/81/3f/77/813f773fb808ec3594bc9741f8b6a087.jpg";
+        const IMG_RICH_WIN = "https://i.pinimg.com/736x/5e/5c/09/5e5c09fd1af73413dd1a8d5aeab83e2b.jpg";
+        const IMG_BROKE = "https://i.pinimg.com/736x/ec/26/02/ec2602bb89489368d83f0b0604509796.jpg";
+
+        function showReaction(imgSrc, duration = 3000) {
+            const toast = document.getElementById('reaction-toast');
+            const img = document.getElementById('reaction-img');
+            img.src = imgSrc;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), duration);
+        }
+
+        const peer = new Peer({ config: { 'iceServers': [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }] } });
+        let conn; let isHost = false; let mode = 5; 
+        let myBudget = 100, oppBudget = 100;
+        let myName = "", oppName = "";
+        let matchPlayersQueue = []; 
+        let currentRound = 0; let currentBid = 0; let highestBidder = null; 
+        let myTeam = { LGD:[], GK:[], DEF:[], MID:[], ATT:[] };
+        let oppTeam = { LGD:[], GK:[], DEF:[], MID:[], ATT:[] };
+        let endViewMode = 'me'; 
+        let borrowUsedThisRound = false;
+
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('fade-out');
+                setTimeout(() => { document.getElementById('splash-screen').style.display = 'none'; document.getElementById('lobby-screen').classList.remove('hidden'); document.getElementById('lobby-screen').classList.add('flex'); }, 1000);
+            }, 1500);
+        };
+
+        peer.on('open', (id) => { document.getElementById('my-room-code').innerText = id; });
+        peer.on('connection', (connection) => { if (conn) return; conn = connection; isHost = true; setupConnection(); });
+
+        function joinGame() {
+            myName = document.getElementById('player-name').value || "أنا";
+            const friendCode = document.getElementById('friend-code').value.trim();
+            if (friendCode) { document.getElementById('lobby-status').innerText = "جاري الاتصال..."; conn = peer.connect(friendCode); isHost = false; setupConnection(); } 
+        }
+
+        function copyRoomCode() {
+            const roomCode = document.getElementById('my-room-code').innerText;
+            if (roomCode !== "جاري التحميل...") {
+                navigator.clipboard.writeText(roomCode).then(() => {
+                    alert("تم نسخ كود الغرفة: " + roomCode);
+                }).catch(err => {
+                    console.error('فشل النسخ: ', err);
+                });
+            }
+        }
+
+        function resetGameState(newMode = mode) {
+            mode = newMode;
+            myBudget = mode === 11 ? 200 : 100; oppBudget = myBudget;
+            currentRound = 0; currentBid = 0; highestBidder = null; borrowUsedThisRound = false;
+            myTeam = { LGD:[], GK:[], DEF:[], MID:[], ATT:[] }; oppTeam = { LGD:[], GK:[], DEF:[], MID:[], ATT:[] };
+            
+            document.getElementById('end-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('flex');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-screen').classList.add('flex');
+        }
+
+        function setupConnection() {
+            conn.on('open', () => {
+                conn.send({ type: 'INFO', name: myName });
+                document.getElementById('lobby-screen').classList.add('hidden'); document.getElementById('game-screen').classList.remove('hidden'); document.getElementById('game-screen').classList.add('flex');
+                if (isHost) initGameData();
+            });
+
+            conn.on('data', (data) => {
+                if (data.type === 'INFO') { oppName = data.name || "الخصم"; updateUI(); }
+                else if (data.type === 'START_GAME') { matchPlayersQueue = data.players; resetGameState(data.mode); startRound(); } 
+                else if (data.type === 'BID') { if (data.amount > currentBid) { currentBid = data.amount; highestBidder = 'opponent'; updateUI(); } } 
+                else if (data.type === 'PASS') { handleRoundResult('opponent'); }
+                else if (data.type === 'BORROW') { oppBudget += 10; updateUI(); }
+                else if (data.type === 'PLAY_AGAIN') { if (isHost) initGameData(); }
+            });
+        }
+
+        function initGameData() {
+            const requiredPositions = mode === 5 ? ['GK', 'DEF', 'MID', 'MID', 'ATT'] : ['GK', 'DEF', 'DEF', 'DEF', 'DEF', 'MID', 'MID', 'MID', 'ATT', 'ATT', 'ATT'];
+            matchPlayersQueue = [];
+            // نسخة جديدة من اللعيبة كل ماتش
+            let pools = { GK: [...masterPlayersPool.GK].sort(()=>0.5-Math.random()), DEF: [...masterPlayersPool.DEF].sort(()=>0.5-Math.random()), MID: [...masterPlayersPool.MID].sort(()=>0.5-Math.random()), ATT: [...masterPlayersPool.ATT].sort(()=>0.5-Math.random()) };
+            
+            requiredPositions.forEach(posCat => {
+                if(pools[posCat].length < 2) pools[posCat] = [...masterPlayersPool[posCat]].sort(()=>0.5-Math.random());
+                matchPlayersQueue.push({ revealed: pools[posCat].pop(), hidden: pools[posCat].pop(), category: posCat });
+            });
+            let shuffledLegends = [...masterLegendsPool].sort(()=>0.5-Math.random());
+            matchPlayersQueue.push({ revealed: shuffledLegends.pop(), hidden: shuffledLegends.pop(), category: 'LGD' });
+
+            conn.send({ type: 'START_GAME', players: matchPlayersQueue, mode: mode }); resetGameState(); startRound();
+        }
+
+        function requestPlayAgain() { conn.send({ type: 'PLAY_AGAIN' }); if (isHost) initGameData(); }
+
+        function startRound() {
+            if (currentRound >= matchPlayersQueue.length) { calculateMatchResult(); showEndScreen(); return; }
+            currentBid = 0; highestBidder = null; borrowUsedThisRound = false; document.getElementById('borrow-btn').style.opacity = '1';
+            
+            const roundData = matchPlayersQueue[currentRound];
+            document.getElementById('current-card-container').innerHTML = createCardHTML(roundData.revealed);
+            document.getElementById('round-number').innerText = (currentRound === matchPlayersQueue.length - 1) ? "الأخيرة (أسطورة)" : currentRound + 1;
+            
+            // ريأكشن بداية الجولة
+            if (roundData.revealed.rating >= 89 || roundData.revealed.isLegend) showReaction(IMG_GREAT, 2500);
+            else if (roundData.revealed.rating < 85 && !roundData.revealed.isLegend) showReaction(IMG_MID, 2500);
+
+            document.getElementById('auction-controls-container').style.display = 'block'; updateUI();
+        }
+
+        function borrowMoney() {
+            if(borrowUsedThisRound) return;
+            myBudget += 10; borrowUsedThisRound = true;
+            document.getElementById('borrow-btn').style.opacity = '0.3';
+            conn.send({ type: 'BORROW', amount: 10 }); updateUI();
+        }
+
+        function placeBid(addedAmount) {
+            let newBid = currentBid === 0 ? addedAmount : currentBid + addedAmount;
+            if (newBid > myBudget) { showReaction(IMG_BROKE, 2000); return; }
+            currentBid = newBid; highestBidder = 'me'; conn.send({ type: 'BID', amount: currentBid }); updateUI();
+        }
+
+        function passBid() { if(currentBid === 0) return; conn.send({ type: 'PASS' }); handleRoundResult('me'); }
+
+        function handleRoundResult(passer) {
+            document.getElementById('auction-controls-container').style.display = 'none';
+            const roundData = matchPlayersQueue[currentRound]; const cat = roundData.category;
+            let finalPrice = currentBid === 0 ? 1 : currentBid;
+            let winner = passer === 'me' ? 'opponent' : 'me'; let loser = passer === 'me' ? 'me' : 'opponent';
+
+            if (winner === 'me') { myTeam[cat].push(roundData.revealed); myBudget -= finalPrice; } else { oppTeam[cat].push(roundData.revealed); oppBudget -= finalPrice; }
+            if (loser === 'me') { myTeam[cat].push(roundData.hidden); } else { oppTeam[cat].push(roundData.hidden); }
+
+            updateUI(); showResultOverlay(winner, roundData.revealed, loser, roundData.hidden, finalPrice);
+
+            // ريأكشن نهاية الجولة بناءً على الفلوس والمكسب
+            if (finalPrice >= 25) {
+                if (winner === 'me') setTimeout(()=>showReaction(IMG_RICH_WIN, 3500), 1000);
+                else if (loser === 'me') setTimeout(()=>showReaction(IMG_SCAMMED, 3500), 1000);
+            }
+
+            setTimeout(() => { document.getElementById('round-overlay').style.display = 'none'; currentRound++; startRound(); }, 5000);
+        }
+
+        function updateUI() {
+            document.getElementById('my-name-display').innerText = myName; document.getElementById('opp-name-display').innerText = oppName || "الخصم";
+            document.getElementById('my-budget').innerText = myBudget; document.getElementById('opp-budget').innerText = oppBudget;
+            document.getElementById('current-bid').innerText = currentBid + "M";
+            
+            let bidderText = "لا أحد"; if (highestBidder === 'me') bidderText = myName; if (highestBidder === 'opponent') bidderText = oppName || "الخصم";
+            document.getElementById('highest-bidder').innerText = bidderText;
+
+            const btn1 = document.getElementById('btn-bid-1'); const btn5 = document.getElementById('btn-bid-5'); const btnPass = document.getElementById('btn-pass');
+            
+            // منع الانسحاب لو المزاد 0
+            if (currentBid === 0) { btnPass.disabled = true; btnPass.classList.add('opacity-40'); }
+            
+            if (highestBidder === 'me') {
+                btn1.disabled = true; btn5.disabled = true; btnPass.disabled = true;
+                btn1.classList.add('opacity-40'); btn5.classList.add('opacity-40'); btnPass.classList.add('opacity-40');
+            } else {
+                if (currentBid > 0) { btnPass.disabled = false; btnPass.classList.remove('opacity-40'); }
+                let nextBid1 = currentBid === 0 ? 1 : currentBid + 1; let nextBid5 = currentBid === 0 ? 5 : currentBid + 5;
+                if (nextBid1 > myBudget) { btn1.disabled = true; btn1.classList.add('opacity-40'); } else { btn1.disabled = false; btn1.classList.remove('opacity-40'); }
+                if (nextBid5 > myBudget) { btn5.disabled = true; btn5.classList.add('opacity-40'); } else { btn5.disabled = false; btn5.classList.remove('opacity-40'); }
+            }
+            renderSmallPitch();
+        }
+
+        function createCardHTML(p) {
+            if (p.isLegend) return `<div class="fifa-card legend-card"><div class="rating">${p.rating}</div><div class="pos">👑</div><div class="legend-icon">🌟</div><div class="legend-name">${p.nameAr.replace(' ', '<br>')}</div></div>`;
+            let cardColor = p.rating < 80 ? "bronze" : (p.rating < 88 ? "silver" : "gold");
+            return `<div class="fifa-card ${cardColor}"><div class="rating">${p.rating}</div><div class="pos">${p.posCategory}</div><img src="${p.img}"><div class="name">${p.nameAr}</div></div>`;
+        }
+        function createMiniCard(p) {
+            if (p.isLegend) return `<div class="mini-card legend-mini"><div class="pos-badge">👑 أسطورة</div><span>${p.nameAr}</span></div>`;
+            return `<div class="mini-card"><div class="pos-badge">${p.posCategory}</div><img src="${p.img}"><span>${p.nameAr.split(' ')[0]}</span></div>`;
+        }
+
+        function renderSmallPitch() {
+            document.getElementById('my-pitch').innerHTML = `<div class="formation-row">${myTeam.ATT.map(createMiniCard).join('')}</div><div class="formation-row">${myTeam.MID.map(createMiniCard).join('')}</div><div class="formation-row">${myTeam.DEF.map(createMiniCard).join('')}</div><div class="formation-row">${myTeam.LGD.map(createMiniCard).join('')} ${myTeam.GK.map(createMiniCard).join('')}</div>`;
+            document.getElementById('opp-pitch').innerHTML = `<div class="formation-row">${oppTeam.LGD.map(createMiniCard).join('')} ${oppTeam.GK.map(createMiniCard).join('')}</div><div class="formation-row">${oppTeam.DEF.map(createMiniCard).join('')}</div><div class="formation-row">${oppTeam.MID.map(createMiniCard).join('')}</div><div class="formation-row">${oppTeam.ATT.map(createMiniCard).join('')}</div>`;
+        }
+
+        function showResultOverlay(winner, revealedP, loser, hiddenP, price) {
+            document.getElementById('winner-name-text').innerText = `${winner === 'me' ? myName : (oppName || "الخصم")} فاز باللاعب!`;
+            document.getElementById('overlay-card-revealed').innerHTML = createCardHTML(revealedP);
+            document.getElementById('overlay-price').innerText = `مقابل ${price}M`;
+            document.getElementById('loser-name-text').innerText = `${loser === 'me' ? myName : (oppName || "الخصم")} أخد كتعويض:`;
+            document.getElementById('overlay-card-hidden').innerHTML = createCardHTML(hiddenP);
+            document.getElementById('round-overlay').style.display = 'flex';
+        }
+
+        // حكم المباراة العادل بناءً على إجمالي طاقات اللعيبة (Sum of Ratings) مش المتوسط بس
+        function getTeamPower(team) {
+            let total = 0;
+            ['LGD', 'GK', 'DEF', 'MID', 'ATT'].forEach(pos => team[pos].forEach(p => total += p.rating));
+            return total;
+        }
+
+        function calculateMatchResult() {
+            let myPower = getTeamPower(myTeam); let oppPower = getTeamPower(oppTeam);
+            document.getElementById('end-my-name-score').innerText = myName; document.getElementById('end-opp-name-score').innerText = oppName || "الخصم";
+            document.getElementById('my-avg').innerText = myPower; document.getElementById('opp-avg').innerText = oppPower;
+
+            let myGoals = 0; let oppGoals = 0; let verdict = "";
+            let diff = myPower - oppPower;
+
+            if (diff >= 15) { myGoals = 4 + Math.floor(Math.random()*2); oppGoals = 0; verdict = `حكم المباراة يعلن اكتساح تاريخي لـ ${myName}! الخصم مجاش الماتش.`; } 
+            else if (diff > 5) { myGoals = 2 + Math.floor(Math.random()*2); oppGoals = 1; verdict = `فوز مستحق لفريق ${myName} بفضل فرق القوة وتكتيك المزاد.`; } 
+            else if (diff <= -15) { oppGoals = 4 + Math.floor(Math.random()*2); myGoals = 0; verdict = `الخصم ${oppName||""} دمرك تماماً! محتاج تراجع خطتك في المزاد.`; } 
+            else if (diff < -5) { oppGoals = 2 + Math.floor(Math.random()*2); myGoals = 1; verdict = `خسارة قاسية، فريق ${oppName||"الخصم"} كان أذكى واستغل فلوسه أحسن.`; } 
+            else { myGoals = 1 + Math.floor(Math.random()*2); oppGoals = myGoals; verdict = "حكم المباراة يعلن التعادل الإيجابي! التشكيلتين شبه بعض بالظبط."; }
+
+            document.getElementById('predicted-score').innerText = `${myGoals} - ${oppGoals}`;
+            document.getElementById('match-verdict').innerText = verdict;
+        }
+
+        function renderEndPitch() {
+            const t = endViewMode === 'me' ? myTeam : oppTeam;
+            document.getElementById('end-pitch-container').innerHTML = `<div class="formation-row">${t.ATT.map(createMiniCard).join('')}</div><div class="formation-row">${t.MID.map(createMiniCard).join('')}</div><div class="formation-row">${t.DEF.map(createMiniCard).join('')}</div><div class="formation-row">${t.LGD.map(createMiniCard).join('')}</div><div class="formation-row">${t.GK.map(createMiniCard).join('')}</div>`;
+        }
+
+        function toggleEndView() {
+            const btn = document.getElementById('toggle-view-btn');
+            if (endViewMode === 'me') { endViewMode = 'opp'; btn.innerHTML = `🔄 عرض تشكيلتي`; btn.classList.replace('bg-blue-600', 'bg-red-600'); } 
+            else { endViewMode = 'me'; btn.innerHTML = `🔄 عرض تشكيلة الخصم`; btn.classList.replace('bg-red-600', 'bg-blue-600'); }
+            renderEndPitch();
+        }
+
+        function showEndScreen() {
+            document.getElementById('game-screen').classList.remove('flex'); document.getElementById('game-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden'); document.getElementById('end-screen').classList.add('flex');
+            endViewMode = 'me'; toggleEndView(); toggleEndView(); // reset to 'me' visually
+        }
+    </script>
+</body>
+</html>
